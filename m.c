@@ -22,7 +22,7 @@ new_child(Window parent, int x, int y, int w, int h)
 Window
 new_title(struct client *c)
 {
-   Window w = new_child(root, c->x, c->y - 23, 200, 20);
+   Window w = new_child(root, c->x, c->y - 23, c->w, 20);
    XSelectInput(dpy, w, ButtonPressMask | ButtonReleaseMask |
                                           ButtonMotionMask);
    return w;
@@ -164,6 +164,7 @@ printf("title of <%p> button%d release. (press=%d)\n", c, e.xbutton.button, pres
          c->w = (rx - c->x < 32) ? 32 : rx - c->x;
          c->h = (ry - c->y < 32) ? 32 : ry - c->y;
          XResizeWindow(dpy, c->client_window, c->w, c->h);
+         XResizeWindow(dpy, c->title_window,  c->w, 20);
        }
       }
    }

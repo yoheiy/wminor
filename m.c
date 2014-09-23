@@ -18,9 +18,12 @@ new_child(Window parent, int x, int y, int w, int h)
 }
 
 Window
-new_toplevel(struct client *c)
+new_title(struct client *c)
 {
-   return new_child(root, c->x, c->y - 23, 200, 20);
+   Window w = new_child(root, c->x, c->y - 23, 200, 20);
+   XSelectInput(dpy, w, ButtonPressMask | ButtonReleaseMask |
+                                          Button1MotionMask);
+   return w;
 }
 
 void
@@ -39,6 +42,17 @@ find_client(Window w)
 
    for (i = 0; i < nr_clients; i++)
       if (clients[i].client_window == w)
+         return &clients[i];
+   return NULL;
+}
+
+struct client *
+find_client_from_title(Window w)
+{
+   int i;
+
+   for (i = 0; i < nr_clients; i++)
+      if (clients[i].title_window == w)
          return &clients[i];
    return NULL;
 }
@@ -62,6 +76,7 @@ main(void)
       XEvent e;
       Window w, t;
       struct client *c;
+      int dx, dy;
 
       XNextEvent(dpy, &e);
 
@@ -69,9 +84,10 @@ main(void)
       case MapRequest:
          c = &clients[nr_clients++];
          w = e.xmaprequest.window;
+printf("MapRequest <%x>\n", (int)w);
          c->client_window = w;
          get_geometry_xy(c);
-         t = new_toplevel(c);
+         t = new_title(c);
          c->title_window = t;
          XMapRaised(dpy, t);
          XMapRaised(dpy, w);
@@ -95,6 +111,31 @@ printf("Client <%p> destroyed.\n", c);
          XUnmapWindow(dpy, c->title_window);
          remove_client(c); c = NULL;
 printf("number of clients = %d\n", nr_clients);
+         break;
+      case ButtonPress:
+         w = e.xbutton.window;
+printf("ButtonPress <%x>\n", (int)w);
+         c = find_client_from_title(w);
+         if (!c) break;
+         dx = c->x - e.xbutton.x_root;
+         dy = c->y - e.xbutton.y_root;
+printf("title of <%p> button press.\n", c);
+         break;
+      case ButtonRelease:
+         w = e.xbutton.window;
+printf("ButtonRelease <%x>\n", (int)w);
+         c = find_client_from_title(w);
+         if (!c) break;
+printf("title of <%p> button release.\n", c);
+         break;
+      case MotionNotify:
+         w = e.xmotion.window;
+         c = find_client_from_title(w);
+         if (!c) break;
+         c->x = e.xmotion.x_root + dx;
+         c->y = e.xmotion.y_root + dy;
+         XMoveWindow(dpy, c->client_window, c->x, c->y);
+         XMoveWindow(dpy, c->title_window,  c->x, c->y - 23);
       }
    }
    XCloseDisplay(dpy);

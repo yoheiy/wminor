@@ -162,13 +162,11 @@ printf("title of <%p> button%d release. (press=%d)\n", c, e.xbutton.button, pres
          if (c->y < 23) c->y = 23;
          if (c->x > screen_width - c->w - 2) c->x = screen_width - c->w - 2;
          if (c->y > screen_height       + 1) c->y = screen_height + 1;
-         XMoveWindow(dpy, c->client_window, c->x, c->y);
-         XMoveWindow(dpy, c->title_window,  c->x, c->y - 23);
-         if (press_button == 1) break;
-         c->w = (rx - c->x < 32) ? 32 : rx - c->x;
-         c->h = (ry - c->y < 32) ? 32 : ry - c->y;
-         XResizeWindow(dpy, c->client_window, c->w, c->h);
-         XResizeWindow(dpy, c->title_window,  c->w, 20);
+         if (press_button == 3) {
+            c->w = (rx - c->x < 32) ? 32 : rx - c->x;
+            c->h = (ry - c->y < 32) ? 32 : ry - c->y; }
+         XMoveResizeWindow(dpy, c->client_window, c->x, c->y,      c->w, c->h);
+         XMoveResizeWindow(dpy, c->title_window,  c->x, c->y - 23, c->w, 20);
        }
       }
    }

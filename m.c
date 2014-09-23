@@ -160,8 +160,8 @@ printf("title of <%p> button%d release. (press=%d)\n", c, e.xbutton.button, pres
          c->y = e.xmotion.y_root + dy;
          if (c->x < 0)  c->x = 0;
          if (c->y < 23) c->y = 23;
-         if (c->x > screen_width  - 202) c->x = screen_width - 202;
-         if (c->y > screen_height + 1)  c->y = screen_height + 1;
+         if (c->x > screen_width - c->w - 2) c->x = screen_width - c->w - 2;
+         if (c->y > screen_height       + 1) c->y = screen_height + 1;
          XMoveWindow(dpy, c->client_window, c->x, c->y);
          XMoveWindow(dpy, c->title_window,  c->x, c->y - 23);
          if (press_button == 1) break;

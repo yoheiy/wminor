@@ -95,6 +95,10 @@ main(void)
 printf("MapRequest <%x>\n", (int)w);
          c->client_window = w;
          get_geometry_xywh(c);
+         if (c->y < 23) {
+            c->y = 23;
+            XMoveWindow(dpy, c->client_window, c->x, c->y);
+         }
          t = new_title(c);
          c->title_window = t;
          XMapRaised(dpy, t);

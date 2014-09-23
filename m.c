@@ -70,7 +70,7 @@ main(void)
 {
    int press_button = 0;
    int dx, dy;
-   unsigned int ow, oh;
+   int rx, ry;
 
    dpy = XOpenDisplay(NULL);
    if (!dpy) return 1;
@@ -131,8 +131,8 @@ printf("title of <%p> button%d press. (press=%d)\n", c, e.xbutton.button, press_
          press_button = e.xbutton.button;
          dx = c->x - e.xbutton.x_root;
          dy = c->y - e.xbutton.y_root;
-         ow = c->w;
-         oh = c->h;
+         rx = c->x + (int)c->w;
+         ry = c->y + (int)c->h;
 printf("title of <%p> button%d press. (press=%d)\n", c, e.xbutton.button, press_button);
          break;
       case ButtonRelease:
@@ -151,6 +151,7 @@ printf("title of <%p> button%d release. (press=%d)\n", c, e.xbutton.button, pres
          if (!c) break;
        switch (press_button) {
        case Button1:
+       case Button3:
          c->x = e.xmotion.x_root + dx;
          c->y = e.xmotion.y_root + dy;
          if (c->x < 0)  c->x = 0;
@@ -159,16 +160,9 @@ printf("title of <%p> button%d release. (press=%d)\n", c, e.xbutton.button, pres
          if (c->y > screen_height + 1)  c->y = screen_height + 1;
          XMoveWindow(dpy, c->client_window, c->x, c->y);
          XMoveWindow(dpy, c->title_window,  c->x, c->y - 23);
-         break;
-       case Button3:
-         if (e.xmotion.x_root + dx - c->x + (int)ow < 32)
-            c->w = 32;
-         else
-            c->w = e.xmotion.x_root + dx - c->x + ow;
-         if (e.xmotion.y_root + dy - c->y + (int)oh < 32)
-            c->h = 32;
-         else
-            c->h = e.xmotion.y_root + dy - c->y + oh;
+         if (press_button == 1) break;
+         c->w = (rx - c->x < 32) ? 32 : rx - c->x;
+         c->h = (ry - c->y < 32) ? 32 : ry - c->y;
          XResizeWindow(dpy, c->client_window, c->w, c->h);
        }
       }

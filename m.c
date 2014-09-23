@@ -8,6 +8,7 @@ struct client {
    int x, y;
 } clients[80];
 int nr_clients;
+int screen_width, screen_height;
 
 Window
 new_child(Window parent, int x, int y, int w, int h)
@@ -72,6 +73,9 @@ main(void)
    root = DefaultRootWindow(dpy);
    XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask);
 
+   screen_width  = XDisplayWidth(dpy, DefaultScreen(dpy));
+   screen_height = XDisplayHeight(dpy, DefaultScreen(dpy));
+
    for (;;) {
       XEvent e;
       Window w, t;
@@ -134,6 +138,10 @@ printf("title of <%p> button release.\n", c);
          if (!c) break;
          c->x = e.xmotion.x_root + dx;
          c->y = e.xmotion.y_root + dy;
+         if (c->x < 0)  c->x = 0;
+         if (c->y < 23) c->y = 23;
+         if (c->x > screen_width  - 202) c->x = screen_width - 202;
+         if (c->y > screen_height + 1)  c->y = screen_height + 1;
          XMoveWindow(dpy, c->client_window, c->x, c->y);
          XMoveWindow(dpy, c->title_window,  c->x, c->y - 23);
       }

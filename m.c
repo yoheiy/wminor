@@ -6,7 +6,7 @@ struct client {
    Window client_window;
    Window title_window;
    int x, y;
-   unsigned int w, h;
+   unsigned int w, h, b;
 } clients[80];
 int nr_clients;
 int screen_width, screen_height;
@@ -32,9 +32,56 @@ void
 get_geometry_xywh(struct client *c)
 {
    Window r;
-   unsigned int b, d;
+   unsigned int d;
 
-   XGetGeometry(dpy, c->client_window, &r, &c->x, &c->y, &c->w, &c->h, &b, &d);
+   XGetGeometry(dpy, c->client_window, &r,
+         &c->x, &c->y, &c->w, &c->h, &c->b, &d);
+}
+
+int
+detect_collision(struct client *p, struct client *q, struct client *f)
+{
+   int xhit, yhit;
+
+   for (; q < p; q++) {
+      xhit = yhit = 0;
+      if ((f->x <= q->x) && ((f->x + f->w + 2 * f->b) > q->x)) xhit = 1;
+      if ((q->x <= f->x) && ((q->x + q->w + 2 * f->b) > f->x)) xhit = 1;
+      if ((f->y <= q->y) && ((f->y + f->h + 2 * f->b) > q->y)) yhit = 1;
+      if ((q->y <= f->y) && ((q->y + q->h + 2 * f->b) > f->y)) yhit = 1;
+      if (xhit && yhit) return 1;
+   }
+   return 0;
+}
+
+int
+sort_clients(struct client *y)
+{
+   struct client *w = clients, q[80], *p = q;
+   int i, j, k;
+
+   i = j = k = y - clients;
+
+   *p++ = w[i++];
+   for (; i < nr_clients; i++)
+      if (detect_collision(p, q, &w[i]))
+         *p++ = w[i];
+      else
+         w[j++] = w[i];
+
+   p = q;
+   for (; j < nr_clients; j++)
+      w[j] = *p++;
+
+   return k;
+}
+
+void
+raise_upper(int i)
+{
+   for (; i < nr_clients; i++) {
+      XRaiseWindow(dpy, clients[i].client_window);
+      XRaiseWindow(dpy, clients[i].title_window); }
 }
 
 struct client *
@@ -62,7 +109,11 @@ find_client_from_title(Window w)
 void
 remove_client(struct client *c)
 {
-   *c = clients[--nr_clients];
+   int i;
+
+   for (i = c - clients; i < nr_clients; i++)
+      clients[i] = clients[i + 1];
+   nr_clients--;
 }
 
 int
@@ -128,6 +179,7 @@ main(void)
          dy = c->y - e.xbutton.y_root;
          rx = c->x + (int)c->w;
          ry = c->y + (int)c->h;
+raise_upper(sort_clients(c));
          break;
       case ButtonRelease:
          w = e.xbutton.window;

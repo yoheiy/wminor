@@ -92,7 +92,6 @@ main(void)
       case MapRequest:
          c = &clients[nr_clients++];
          w = e.xmaprequest.window;
-printf("MapRequest <%x>\n", (int)w);
          c->client_window = w;
          get_geometry_xywh(c);
          if (c->y < 23) {
@@ -106,68 +105,60 @@ printf("MapRequest <%x>\n", (int)w);
          break;
       case UnmapNotify:
          w = e.xunmap.window;
-printf("UnmapNotify <%x>\n", (int)w);
          c = find_client(w);
          if (!c) break;
-printf("Client <%p> unmapped.\n", c);
          XUnmapWindow(dpy, c->title_window);
          remove_client(c); c = NULL;
-printf("number of clients = %d\n", nr_clients);
          break;
       case DestroyNotify:
          w = e.xdestroywindow.window;
-printf("DestroyNotify <%x>\n", (int)w);
          c = find_client(w);
          if (!c) break;
-printf("Client <%p> destroyed.\n", c);
          XUnmapWindow(dpy, c->title_window);
          remove_client(c); c = NULL;
-printf("number of clients = %d\n", nr_clients);
          break;
 
       case ButtonPress:
          w = e.xbutton.window;
-printf("ButtonPress <%x>\n", (int)w);
          c = find_client_from_title(w);
          if (!c) break;
-printf("title of <%p> button%d press. (press=%d)\n", c, e.xbutton.button, press_button);
          if (press_button) break;
          press_button = e.xbutton.button;
          dx = c->x - e.xbutton.x_root;
          dy = c->y - e.xbutton.y_root;
          rx = c->x + (int)c->w;
          ry = c->y + (int)c->h;
-printf("title of <%p> button%d press. (press=%d)\n", c, e.xbutton.button, press_button);
          break;
       case ButtonRelease:
          w = e.xbutton.window;
-printf("ButtonRelease <%x>\n", (int)w);
          c = find_client_from_title(w);
          if (!c) break;
-printf("title of <%p> button%d release. (press=%d)\n", c, e.xbutton.button, press_button);
          if (press_button != e.xbutton.button) break;
          press_button = 0;
-printf("title of <%p> button%d release. (press=%d)\n", c, e.xbutton.button, press_button);
          break;
       case MotionNotify:
          w = e.xmotion.window;
          c = find_client_from_title(w);
          if (!c) break;
-       switch (press_button) {
-       case Button1:
-       case Button3:
-         c->x = e.xmotion.x_root + dx;
-         c->y = e.xmotion.y_root + dy;
-         if (c->x < 0)  c->x = 0;
-         if (c->y < 23) c->y = 23;
-         if (c->x > screen_width - c->w - 2) c->x = screen_width - c->w - 2;
-         if (c->y > screen_height       + 1) c->y = screen_height + 1;
-         if (press_button == 3) {
-            c->w = (rx - c->x < 32) ? 32 : rx - c->x;
-            c->h = (ry - c->y < 32) ? 32 : ry - c->y; }
-         XMoveResizeWindow(dpy, c->client_window, c->x, c->y,      c->w, c->h);
-         XMoveResizeWindow(dpy, c->title_window,  c->x, c->y - 23, c->w, 20);
-       }
+         switch (press_button) {
+         case Button1:
+         case Button3:
+            c->x = e.xmotion.x_root + dx;
+            c->y = e.xmotion.y_root + dy;
+            if (c->x < 0)  c->x = 0;
+            if (c->y < 23) c->y = 23;
+            if (c->x > screen_width - c->w - 2)
+               c->x = screen_width - c->w - 2;
+            if (c->y > screen_height + 1)
+               c->y = screen_height + 1;
+            if (press_button == 3) {
+               c->w = (rx - c->x < 32) ? 32 : rx - c->x;
+               c->h = (ry - c->y < 32) ? 32 : ry - c->y; }
+            XMoveResizeWindow(dpy, c->client_window,
+                  c->x, c->y,      c->w, c->h);
+            XMoveResizeWindow(dpy, c->title_window,
+                  c->x, c->y - 23, c->w, 20);
+         }
       }
    }
    XCloseDisplay(dpy);

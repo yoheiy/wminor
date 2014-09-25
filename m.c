@@ -77,11 +77,17 @@ sort_clients(struct client *y)
 }
 
 void
-raise_upper(int i)
+raise_upper(int x)
 {
-   for (; i < nr_clients; i++) {
-      XRaiseWindow(dpy, clients[i].client_window);
-      XRaiseWindow(dpy, clients[i].title_window); }
+   Window w[160];
+   int i, n;
+
+   n = nr_clients - x;
+
+   for (i = 0; i < n; i++) {
+      w[2 * i]     = clients[nr_clients - 1 - i].client_window;
+      w[2 * i + 1] = clients[nr_clients - 1 - i].title_window; }
+   XRestackWindows(dpy, w, 2 * n);
 }
 
 struct client *

@@ -122,6 +122,30 @@ remove_client(struct client *c)
    nr_clients--;
 }
 
+void
+init_windows(Window root)
+{
+   Window rt, par, *child, w[2];
+   struct client *c;
+   unsigned int i, n;
+
+   XQueryTree(dpy, root, &rt, &par, &child, &n);
+   for (i = 0; i < n; i++) {
+      c = &clients[nr_clients++];
+      w[0] = child[i];
+      c->client_window = w[0];
+      get_geometry_xywh(c);
+      if (c->y < 23) {
+         c->y = 23;
+         XMoveWindow(dpy, c->client_window, c->x, c->y);
+      }
+      w[1] = new_title(c);
+      c->title_window = w[1];
+      XRestackWindows(dpy, w, 2);
+      XMapWindow(dpy, w[1]);
+   }
+}
+
 int
 main(void)
 {
@@ -134,6 +158,7 @@ main(void)
 
    root = DefaultRootWindow(dpy);
    XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask);
+   init_windows(root);
 
    screen_width  = XDisplayWidth(dpy, DefaultScreen(dpy));
    screen_height = XDisplayHeight(dpy, DefaultScreen(dpy));

@@ -23,6 +23,7 @@ Window
 new_title(struct client *c)
 {
    Window w = new_child(root, c->x, c->y - 23, c->w, 20);
+   c->title_window = w;
    XSelectInput(dpy, w, ButtonPressMask | ButtonReleaseMask |
                                           ButtonMotionMask);
    return w;
@@ -123,27 +124,30 @@ remove_client(struct client *c)
 }
 
 void
+init_one_window(struct client *c, Window x)
+{
+   Window w[2];
+
+   w[0] = c->client_window = x;
+   get_geometry_xywh(c);
+   if (c->y < 23) {
+      c->y = 23;
+      XMoveWindow(dpy, c->client_window, c->x, c->y);
+   }
+   w[1] = new_title(c);
+   XRestackWindows(dpy, w, 2);
+   XMapWindow(dpy, w[1]);
+}
+
+void
 init_windows(Window root)
 {
-   Window rt, par, *child, w[2];
-   struct client *c;
+   Window rt, par, *child;
    unsigned int i, n;
 
    XQueryTree(dpy, root, &rt, &par, &child, &n);
-   for (i = 0; i < n; i++) {
-      c = &clients[nr_clients++];
-      w[0] = child[i];
-      c->client_window = w[0];
-      get_geometry_xywh(c);
-      if (c->y < 23) {
-         c->y = 23;
-         XMoveWindow(dpy, c->client_window, c->x, c->y);
-      }
-      w[1] = new_title(c);
-      c->title_window = w[1];
-      XRestackWindows(dpy, w, 2);
-      XMapWindow(dpy, w[1]);
-   }
+   for (i = 0; i < n; i++)
+      init_one_window(&clients[nr_clients++], child[i]);
 }
 
 int
@@ -165,7 +169,7 @@ main(void)
 
    for (;;) {
       XEvent e;
-      Window w, t;
+      Window w;
       struct client *c;
 
       XNextEvent(dpy, &e);
@@ -174,16 +178,8 @@ main(void)
       case MapRequest:
          c = &clients[nr_clients++];
          w = e.xmaprequest.window;
-         c->client_window = w;
-         get_geometry_xywh(c);
-         if (c->y < 23) {
-            c->y = 23;
-            XMoveWindow(dpy, c->client_window, c->x, c->y);
-         }
-         t = new_title(c);
-         c->title_window = t;
-         XMapRaised(dpy, t);
-         XMapRaised(dpy, w);
+         init_one_window(c, w);
+         XMapWindow(dpy, w);
          break;
       case UnmapNotify:
          w = e.xunmap.window;

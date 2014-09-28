@@ -229,12 +229,15 @@ raise_upper(sort_clients(c));
          if (!c) break;
          switch (press_button) {
          case Button1:
+         case Button2:
          case Button3:
             r.t = r.l = 0;
             r.r = screen_width;
             r.b = screen_height;
             c->x = e.xmotion.x_root + dx;
             c->y = e.xmotion.y_root + dy;
+            if (press_button == 2) {
+               r.b -= c->h + 2 * c->b + 1; }
             if (c->x < r.l)      c->x = 0;
             if (c->y < r.t + 23) c->y = 23;
             if (c->x > r.r - c->w - 2)

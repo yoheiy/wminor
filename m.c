@@ -123,7 +123,7 @@ remove_client(struct client *c)
 }
 
 void
-restack_one_window(struct client *c)
+restack_client(struct client *c)
 {
    Window w[2];
 
@@ -133,7 +133,7 @@ restack_one_window(struct client *c)
 }
 
 void
-init_one_window(struct client *c, Window x)
+init_one_client(struct client *c, Window x)
 {
    c->client_window = x;
    get_geometry_xywh(c);
@@ -142,19 +142,19 @@ init_one_window(struct client *c, Window x)
       XMoveWindow(dpy, c->client_window, c->x, c->y);
    }
    new_title(c);
-   restack_one_window(c);
+   restack_client(c);
    XMapWindow(dpy, c->title_window);
 }
 
 void
-init_windows(Window root)
+init_clients(Window root)
 {
    Window rt, par, *child;
    unsigned int i, n;
 
    XQueryTree(dpy, root, &rt, &par, &child, &n);
    for (i = 0; i < n; i++)
-      init_one_window(&clients[nr_clients++], child[i]);
+      init_one_client(&clients[nr_clients++], child[i]);
 }
 
 int
@@ -169,7 +169,7 @@ main(void)
 
    root = DefaultRootWindow(dpy);
    XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask);
-   init_windows(root);
+   init_clients(root);
 
    screen_width  = XDisplayWidth(dpy, DefaultScreen(dpy));
    screen_height = XDisplayHeight(dpy, DefaultScreen(dpy));
@@ -185,7 +185,7 @@ main(void)
       case MapRequest:
          c = &clients[nr_clients++];
          w = e.xmaprequest.window;
-         init_one_window(c, w);
+         init_one_client(c, w);
          XMapWindow(dpy, w);
          break;
       case UnmapNotify:

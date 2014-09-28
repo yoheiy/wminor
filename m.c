@@ -19,14 +19,13 @@ new_child(Window parent, int x, int y, int w, int h)
       WhitePixel(dpy, DefaultScreen(dpy)));
 }
 
-Window
+void
 new_title(struct client *c)
 {
    Window w = new_child(root, c->x, c->y - 23, c->w, 20);
    c->title_window = w;
    XSelectInput(dpy, w, ButtonPressMask | ButtonReleaseMask |
                                           ButtonMotionMask);
-   return w;
 }
 
 void
@@ -124,19 +123,27 @@ remove_client(struct client *c)
 }
 
 void
-init_one_window(struct client *c, Window x)
+restack_one_window(struct client *c)
 {
    Window w[2];
 
-   w[0] = c->client_window = x;
+   w[0] = c->client_window;
+   w[1] = c->title_window;
+   XRestackWindows(dpy, w, 2);
+}
+
+void
+init_one_window(struct client *c, Window x)
+{
+   c->client_window = x;
    get_geometry_xywh(c);
    if (c->y < 23) {
       c->y = 23;
       XMoveWindow(dpy, c->client_window, c->x, c->y);
    }
-   w[1] = new_title(c);
-   XRestackWindows(dpy, w, 2);
-   XMapWindow(dpy, w[1]);
+   new_title(c);
+   restack_one_window(c);
+   XMapWindow(dpy, c->title_window);
 }
 
 void

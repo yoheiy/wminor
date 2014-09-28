@@ -156,6 +156,7 @@ init_one_client(struct client *c, Window x)
    XFree(name);
    new_title(c);
    restack_client(c);
+   XSelectInput(dpy, c->client_window, EnterWindowMask);
    XMapWindow(dpy, c->title_window);
 }
 
@@ -341,6 +342,7 @@ main(void)
       case EnterNotify:
          w = e.xcrossing.window;
          c = find_client_from_title(w);
+         if (!c) c = find_client(w);
          if (!c) break;
          XSetInputFocus(dpy, c->client_window, RevertToPointerRoot, CurrentTime);
          break;

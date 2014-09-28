@@ -32,7 +32,7 @@ new_title(struct client *c)
    Window w = new_child(root, c->x, c->y - 23, c->w, 20);
    c->title_window = w;
    XSelectInput(dpy, w, ButtonPressMask | ButtonReleaseMask |
-                                          ButtonMotionMask | ExposureMask);
+                                          ButtonMotionMask | EnterWindowMask | ExposureMask);
 }
 
 void
@@ -336,6 +336,13 @@ main(void)
             XMoveResizeWindow(dpy, c->title_window,
                   c->x, c->y - 23, c->w, 20);
          }
+         break;
+
+      case EnterNotify:
+         w = e.xcrossing.window;
+         c = find_client_from_title(w);
+         if (!c) break;
+         XSetInputFocus(dpy, c->client_window, RevertToPointerRoot, CurrentTime);
          break;
 
       case Expose:

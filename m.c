@@ -227,6 +227,7 @@ fix_range(struct rect *r, struct client *c)
       int dir = direction_collision(t, s);
       fix_range_one(r, &s, dir);
    }
+   if (r->b < t.b) return;
    r->b -= c->h + 2 * c->b + 1;
 }
 

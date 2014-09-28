@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+/* config */
+const int gap = 1;
+
 Display *dpy;
 Window   root;
 struct client {
@@ -174,10 +177,10 @@ direction_collision(struct rect r0, struct rect r1)
    int xhit, yhit;
 
    xhit = yhit = 0;
-   if ((r0.l <= r1.l) && (r0.r > r1.l)) xhit = 1;
-   if ((r1.l <= r0.l) && (r1.r > r0.l)) xhit = 1;
-   if ((r0.t <= r1.t) && (r0.b > r1.t)) yhit = 1;
-   if ((r1.t <= r0.t) && (r1.b > r0.t)) yhit = 1;
+   if ((r0.l <= r1.l) && (r0.r + gap > r1.l)) xhit = 1;
+   if ((r1.l <= r0.l) && (r1.r + gap > r0.l)) xhit = 1;
+   if ((r0.t <= r1.t) && (r0.b + gap > r1.t)) yhit = 1;
+   if ((r1.t <= r0.t) && (r1.b + gap > r0.t)) yhit = 1;
 
    if (xhit && yhit) return NONE;
 
@@ -193,10 +196,10 @@ void
 fix_range_one(struct rect *r, struct rect *s, int dir)
 {
    switch (dir) {
-   case EAST:  if (r->r > s->l) r->r = s->l; break;
-   case NORTH: if (r->t < s->b) r->t = s->b; break;
-   case WEST:  if (r->l < s->r) r->l = s->r; break;
-   case SOUTH: if (r->b > s->t) r->b = s->t; break;
+   case EAST:  if (r->r > s->l - gap) r->r = s->l - gap; break;
+   case NORTH: if (r->t < s->b - gap) r->t = s->b + gap; break;
+   case WEST:  if (r->l < s->r - gap) r->l = s->r + gap; break;
+   case SOUTH: if (r->b > s->t - gap) r->b = s->t - gap; break;
    }
 }
 

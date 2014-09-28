@@ -178,6 +178,7 @@ main(void)
       XEvent e;
       Window w;
       struct client *c;
+      struct rect { int t, b, l, r; } r;
 
       XNextEvent(dpy, &e);
 
@@ -229,14 +230,17 @@ raise_upper(sort_clients(c));
          switch (press_button) {
          case Button1:
          case Button3:
+            r.t = r.l = 0;
+            r.r = screen_width;
+            r.b = screen_height;
             c->x = e.xmotion.x_root + dx;
             c->y = e.xmotion.y_root + dy;
-            if (c->x < 0)  c->x = 0;
-            if (c->y < 23) c->y = 23;
-            if (c->x > screen_width - c->w - 2)
-               c->x = screen_width - c->w - 2;
-            if (c->y > screen_height + 1)
-               c->y = screen_height + 1;
+            if (c->x < r.l)      c->x = 0;
+            if (c->y < r.t + 23) c->y = 23;
+            if (c->x > r.r - c->w - 2)
+               c->x = r.r - c->w - 2;
+            if (c->y > r.b + 1)
+               c->y = r.b + 1;
             if (press_button == 3) {
                c->w = (rx - c->x < 32) ? 32 : rx - c->x;
                c->h = (ry - c->y < 32) ? 32 : ry - c->y; }

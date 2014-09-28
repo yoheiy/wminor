@@ -158,10 +158,72 @@ init_clients(Window root)
       init_one_client(&clients[nr_clients++], child[i]);
 }
 
+enum { NONE, EAST, NORTH, WEST, SOUTH };
+int
+direction_collision(struct client *p, struct client *q)
+{
+   int xhit, yhit;
+
+   xhit = yhit = 0;
+   if ((p->x <= q->x) && ((p->x + p->w + 2 * p->b) > q->x)) xhit = 1;
+   if ((q->x <= p->x) && ((q->x + q->w + 2 * p->b) > p->x)) xhit = 1;
+   if ((p->y <= q->y) && ((p->y + p->h + 2 * p->b) > q->y)) yhit = 1;
+   if ((q->y <= p->y) && ((q->y + q->h + 2 * p->b) > p->y)) yhit = 1;
+
+   if (xhit && yhit) return NONE;
+
+   if (yhit && p->x < q->x) return EAST;
+   if (xhit && p->y > q->y) return NORTH;
+   if (yhit && p->x > q->x) return WEST;
+   if (xhit && p->y < q->y) return SOUTH;
+
+   return NONE;
+}
+
+void
+fix_range_one(struct rect *r, struct rect *s, int dir)
+{
+   switch (dir) {
+   case EAST:  if (r->r > s->l) r->r = s->l; break;
+   case NORTH: if (r->t < s->b) r->t = s->b; break;
+   case WEST:  if (r->l < s->r) r->l = s->r; break;
+   case SOUTH: if (r->b > s->t) r->b = s->t; break;
+   }
+}
+
+struct rect
+client_rect(struct client *c)
+{
+   struct rect r;
+
+   r.l = c->x;
+   r.t = c->y - 23;
+   r.r = c->x + c->w + 2 * c->b;
+   r.b = c->y + c->h + 2 * c->b;
+
+   return r;
+}
+
 void
 fix_range(struct rect *r, struct client *c)
 {
+   int i;
+
+//printf("[%d, %d ; %d, %d]->", r->l, r->t, r->r, r->b);
+//{ struct rect t = client_rect(c);
+//printf("[%d, %d ; %d, %d]\n", t.l,  t.t,  t.r,  t.b); }
+
+   for (i = 0; i < nr_clients; i++) {
+      struct rect s = client_rect(&clients[i]);
+      int dir = direction_collision(c, &clients[i]);
+      fix_range_one(r, &s, dir);
+
+//printf(" - [%d, %d ; %d, %d]",   r->l, r->t, r->r, r->b);
+//printf(" < [%d, %d ; %d, %d]\n", s.l,  s.t,  s.r,  s.b);
+   }
+
    r->b -= c->h + 2 * c->b + 1;
+//printf("[%d, %d ; %d, %d]\n", r->l, r->t, r->r, r->b);
 }
 
 int
@@ -221,7 +283,12 @@ main(void)
          dy = c->y - e.xbutton.y_root;
          rx = c->x + (int)c->w;
          ry = c->y + (int)c->h;
-raise_upper(sort_clients(c));
+         r.t = r.l = 0;
+         r.r = screen_width;
+         r.b = screen_height;
+         if (press_button == 2)
+            fix_range(&r, c);
+         raise_upper(sort_clients(c));
          break;
       case ButtonRelease:
          w = e.xbutton.window;
@@ -238,15 +305,10 @@ raise_upper(sort_clients(c));
          case Button1:
          case Button2:
          case Button3:
-            r.t = r.l = 0;
-            r.r = screen_width;
-            r.b = screen_height;
             c->x = e.xmotion.x_root + dx;
             c->y = e.xmotion.y_root + dy;
-            if (press_button == 2)
-               fix_range(&r, c);
-            if (c->x < r.l)      c->x = 0;
-            if (c->y < r.t + 23) c->y = 23;
+            if (c->x < r.l)      c->x = r.l;
+            if (c->y < r.t + 23) c->y = r.t + 23;
             if (c->x > r.r - c->w - 2)
                c->x = r.r - c->w - 2;
             if (c->y > r.b + 1)

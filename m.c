@@ -1,5 +1,7 @@
 #include <X11/Xlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 Display *dpy;
 Window   root;
 struct client {
@@ -7,6 +9,7 @@ struct client {
    Window title_window;
    int x, y;
    unsigned int w, h, b;
+   char *name;
 } clients[80];
 int nr_clients;
 int screen_width, screen_height;
@@ -26,7 +29,7 @@ new_title(struct client *c)
    Window w = new_child(root, c->x, c->y - 23, c->w, 20);
    c->title_window = w;
    XSelectInput(dpy, w, ButtonPressMask | ButtonReleaseMask |
-                                          ButtonMotionMask);
+                                          ButtonMotionMask | ExposureMask);
 }
 
 void
@@ -118,6 +121,7 @@ remove_client(struct client *c)
 {
    int i;
 
+   free(c->name);
    for (i = c - clients; i < nr_clients; i++)
       clients[i] = clients[i + 1];
    nr_clients--;
@@ -136,12 +140,17 @@ restack_client(struct client *c)
 void
 init_one_client(struct client *c, Window x)
 {
+   char *name;
+
    c->client_window = x;
    get_geometry_xywh(c);
    if (c->y < 23) {
       c->y = 23;
       XMoveWindow(dpy, c->client_window, c->x, c->y);
    }
+   XFetchName(dpy, x, &name);
+   c->name = strdup(name);
+   XFree(name);
    new_title(c);
    restack_client(c);
    XMapWindow(dpy, c->title_window);
@@ -216,6 +225,16 @@ fix_range(struct rect *r, struct client *c)
       fix_range_one(r, &s, dir);
    }
    r->b -= c->h + 2 * c->b + 1;
+}
+
+void
+draw_title(struct client *c)
+{
+   GC gc = XCreateGC(dpy, c->title_window, 0, NULL);
+
+   XClearWindow(dpy, c->title_window);
+   XDrawString(dpy, c->title_window, gc, 4, 10, c->name, strlen(c->name));
+   XFreeGC(dpy, gc);
 }
 
 int
@@ -313,6 +332,13 @@ main(void)
             XMoveResizeWindow(dpy, c->title_window,
                   c->x, c->y - 23, c->w, 20);
          }
+         break;
+
+      case Expose:
+         w = e.xexpose.window;
+         c = find_client_from_title(w);
+         if (!c) break;
+         draw_title(c);
       }
    }
    XCloseDisplay(dpy);

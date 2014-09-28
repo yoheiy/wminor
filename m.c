@@ -324,13 +324,13 @@ main(void)
             c->y = e.xmotion.y_root + dy;
             if (c->x < r.l)      c->x = r.l;
             if (c->y < r.t + 23) c->y = r.t + 23;
+            if (press_button == 3) {
+               c->w = (rx - c->x < 32) ? 32 : rx - c->x;
+               c->h = (ry - c->y < 32) ? 32 : ry - c->y; }
             if (c->x > r.r - c->w - 2)
                c->x = r.r - c->w - 2;
             if (c->y > r.b + 1)
                c->y = r.b + 1;
-            if (press_button == 3) {
-               c->w = (rx - c->x < 32) ? 32 : rx - c->x;
-               c->h = (ry - c->y < 32) ? 32 : ry - c->y; }
             XMoveResizeWindow(dpy, c->client_window,
                   c->x, c->y,      c->w, c->h);
             XMoveResizeWindow(dpy, c->title_window,

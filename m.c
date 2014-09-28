@@ -160,22 +160,22 @@ init_clients(Window root)
 
 enum { NONE, EAST, NORTH, WEST, SOUTH };
 int
-direction_collision(struct client *p, struct client *q)
+direction_collision(struct rect r0, struct rect r1)
 {
    int xhit, yhit;
 
    xhit = yhit = 0;
-   if ((p->x <= q->x) && ((p->x + p->w + 2 * p->b) > q->x)) xhit = 1;
-   if ((q->x <= p->x) && ((q->x + q->w + 2 * p->b) > p->x)) xhit = 1;
-   if ((p->y <= q->y) && ((p->y + p->h + 2 * p->b) > q->y)) yhit = 1;
-   if ((q->y <= p->y) && ((q->y + q->h + 2 * p->b) > p->y)) yhit = 1;
+   if ((r0.l <= r1.l) && (r0.r > r1.l)) xhit = 1;
+   if ((r1.l <= r0.l) && (r1.r > r0.l)) xhit = 1;
+   if ((r0.t <= r1.t) && (r0.b > r1.t)) yhit = 1;
+   if ((r1.t <= r0.t) && (r1.b > r0.t)) yhit = 1;
 
    if (xhit && yhit) return NONE;
 
-   if (yhit && p->x < q->x) return EAST;
-   if (xhit && p->y > q->y) return NORTH;
-   if (yhit && p->x > q->x) return WEST;
-   if (xhit && p->y < q->y) return SOUTH;
+   if (yhit && r0.l < r1.l) return EAST;
+   if (xhit && r0.t > r1.t) return NORTH;
+   if (yhit && r0.l > r1.l) return WEST;
+   if (xhit && r0.t < r1.t) return SOUTH;
 
    return NONE;
 }
@@ -208,22 +208,14 @@ void
 fix_range(struct rect *r, struct client *c)
 {
    int i;
-
-//printf("[%d, %d ; %d, %d]->", r->l, r->t, r->r, r->b);
-//{ struct rect t = client_rect(c);
-//printf("[%d, %d ; %d, %d]\n", t.l,  t.t,  t.r,  t.b); }
+   struct rect t = client_rect(c);
 
    for (i = 0; i < nr_clients; i++) {
       struct rect s = client_rect(&clients[i]);
-      int dir = direction_collision(c, &clients[i]);
+      int dir = direction_collision(t, s);
       fix_range_one(r, &s, dir);
-
-//printf(" - [%d, %d ; %d, %d]",   r->l, r->t, r->r, r->b);
-//printf(" < [%d, %d ; %d, %d]\n", s.l,  s.t,  s.r,  s.b);
    }
-
    r->b -= c->h + 2 * c->b + 1;
-//printf("[%d, %d ; %d, %d]\n", r->l, r->t, r->r, r->b);
 }
 
 int

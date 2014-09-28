@@ -10,6 +10,7 @@ struct client {
 } clients[80];
 int nr_clients;
 int screen_width, screen_height;
+struct rect { int t, b, l, r; };
 
 Window
 new_child(Window parent, int x, int y, int w, int h)
@@ -157,6 +158,12 @@ init_clients(Window root)
       init_one_client(&clients[nr_clients++], child[i]);
 }
 
+void
+fix_range(struct rect *r, struct client *c)
+{
+   r->b -= c->h + 2 * c->b + 1;
+}
+
 int
 main(void)
 {
@@ -178,7 +185,7 @@ main(void)
       XEvent e;
       Window w;
       struct client *c;
-      struct rect { int t, b, l, r; } r;
+      struct rect r;
 
       XNextEvent(dpy, &e);
 
@@ -236,8 +243,8 @@ raise_upper(sort_clients(c));
             r.b = screen_height;
             c->x = e.xmotion.x_root + dx;
             c->y = e.xmotion.y_root + dy;
-            if (press_button == 2) {
-               r.b -= c->h + 2 * c->b + 1; }
+            if (press_button == 2)
+               fix_range(&r, c);
             if (c->x < r.l)      c->x = 0;
             if (c->y < r.t + 23) c->y = 23;
             if (c->x > r.r - c->w - 2)

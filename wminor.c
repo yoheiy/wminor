@@ -328,7 +328,7 @@ main(void)
          case Button3:
             c->x = e.xmotion.x_root + dx;
             c->y = e.xmotion.y_root + dy;
-            if ((shift_flag &= e.xbutton.state)) {
+            if ((shift_flag &= e.xmotion.state)) {
                shift_mode = 0;
                if (c->x > ox) shift_mode |= 1;
                if (c->y > oy) shift_mode |= 2;

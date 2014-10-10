@@ -264,6 +264,7 @@ main(void)
       Window w;
       struct client *c;
       struct rect r;
+      int ox, oy, shift_flag, shift_mode;
 
       XNextEvent(dpy, &e);
 
@@ -294,9 +295,13 @@ main(void)
          c = find_client_from_title(w);
          if (!c) break;
          if (press_button) break;
+         shift_flag = e.xbutton.state & ShiftMask;
+         shift_mode = 0;
          press_button = e.xbutton.button;
          dx = c->x - e.xbutton.x_root;
          dy = c->y - e.xbutton.y_root;
+         ox = c->x;
+         oy = c->y;
          rx = c->x + (int)c->w;
          ry = c->y + (int)c->h;
          r.t = r.l = 0;
@@ -323,6 +328,13 @@ main(void)
          case Button3:
             c->x = e.xmotion.x_root + dx;
             c->y = e.xmotion.y_root + dy;
+            if ((shift_flag &= e.xbutton.state)) {
+               shift_mode = 0;
+               if (c->x > ox) shift_mode |= 1;
+               if (c->y > oy) shift_mode |= 2;
+            }
+            if (shift_mode & 1) c->x = ox;
+            if (shift_mode & 2) c->y = oy;
             if (c->x < r.l)      c->x = r.l;
             if (c->y < r.t + 23) c->y = r.t + 23;
             if (press_button == 3) {

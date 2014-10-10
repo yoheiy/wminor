@@ -1,4 +1,4 @@
-target = m
+target = wminor
 all: $(target)
 
 %: %.c

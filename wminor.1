@@ -1,0 +1,50 @@
+.TH WMINOR "1" "October 2014" "wminor 2014.10" "User Commands"
+.SH NAME
+wminor \- GID-friendly window manager
+.SH SYNOPSIS
+.B wminor
+.SH DESCRIPTION
+.PP
+wminor is a minimalistic window manager.
+wminor is a non-reparenting window manager.
+Each window has titlebar.
+Titlebars are only UI wminor provides.
+Window move is restricted to the screen real estate.
+.SS "Keyboard bindings"
+wminor has no keybind.
+Please try
+.BR ratpoison (1)
+to manipulate windows with keyboard.
+.SS "GID button bindings"
+Drag titlebar with
+.TP
+\fBButton1 (left button)\fR
+to move window,
+.TP
+\fBButton2 (middle button)\fR
+to move window in restricted way, and
+.TP
+\fBButton3 (right button)\fR
+to resize window.
+.SH AUTHOR
+Written by Yamada Yohei.
+.SH "REPORTING BUGS"
+Report bugs to yamadayohei@gmail.com
+.br
+wminor home page: http://uint.skr.jp/
+.SH COPYRIGHT
+Copyright \(co 2014 Yamada Yohei.
+MIT/X License.
+.br
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+.SH SEE ALSO
+.BR ratpoison (1)
+.SH BUGS
+wminor is in alpha state, there are many small bugs.
+.PP
+\(bu Work well with upto 80 client windows.
+.br
+\(bu No support of ICCCM and EWMH.
+.br
+\(bu No support of iconified and maximized window.

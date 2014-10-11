@@ -273,7 +273,7 @@ main(void)
 
    for (;;) {
       XEvent e;
-      Window w;
+      Window w, w_dragging;
       struct client *c;
       struct rect r;
       int ox, oy, shift_flag, shift_mode;
@@ -307,6 +307,7 @@ main(void)
          c = find_client_from_title(w);
          if (!c) break;
          if (press_button) break;
+         w_dragging = w;
          shift_flag = e.xbutton.state & ShiftMask;
          shift_mode = 0;
          press_button = e.xbutton.button;
@@ -328,6 +329,7 @@ main(void)
          c = find_client_from_title(w);
          if (!c) break;
          if (press_button != e.xbutton.button) break;
+         w_dragging = 0;
          press_button = 0;
          draw_title(c);
          break;
@@ -377,7 +379,10 @@ main(void)
          w = e.xexpose.window;
          c = find_client_from_title(w);
          if (!c) break;
-         draw_title(c);
+         if (w == w_dragging)
+            draw_geom_on_titlebar(c);
+         else
+            draw_title(c);
       }
    }
    XCloseDisplay(dpy);

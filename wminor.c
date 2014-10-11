@@ -286,6 +286,15 @@ root_rect(void)
    return r;
 }
 
+void
+titlebar_on_expose(struct client *c, Window w_dragging)
+{
+   if (c->title_window == w_dragging)
+      draw_geom_on_titlebar(c);
+   else
+      draw_title(c);
+}
+
 int
 main(void)
 {
@@ -401,12 +410,8 @@ main(void)
 
       case Expose:
          w = e.xexpose.window;
-         c = find_client_from_title(w);
-         if (!c) break;
-         if (w == w_dragging)
-            draw_geom_on_titlebar(c);
-         else
-            draw_title(c);
+         if ((c = find_client_from_title(w)))
+            titlebar_on_expose(c, w_dragging);
       }
    }
    XCloseDisplay(dpy);

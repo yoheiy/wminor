@@ -1,4 +1,5 @@
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -7,12 +8,17 @@ const int gap = 1;
 
 Display *dpy;
 Window   root;
+struct size_hint {
+   int base_width, base_height;
+   int width_inc,  height_inc;
+};
 struct client {
    Window client_window;
    Window title_window;
    int x, y;
    unsigned int w, h, b;
    char *name;
+   struct size_hint hints;
 } clients[80];
 int nr_clients;
 int screen_width, screen_height;
@@ -43,6 +49,21 @@ get_geometry_xywh(struct client *c)
 
    XGetGeometry(dpy, c->client_window, &r,
          &c->x, &c->y, &c->w, &c->h, &c->b, &d);
+}
+
+void
+get_size_hints(struct client *c)
+{
+   XSizeHints hints;
+   long supplied;
+
+   XGetWMNormalHints(dpy, c->client_window, &hints, &supplied);
+   c->hints.base_width  = (supplied & PBaseSize) ? hints.base_width  :
+                          (supplied & PMinSize)  ? hints.min_width   : 32;
+   c->hints.base_height = (supplied & PBaseSize) ? hints.base_height :
+                          (supplied & PMinSize)  ? hints.min_height  : 32;
+   c->hints.width_inc   = (supplied & PResizeInc) ? hints.width_inc  : 0;
+   c->hints.height_inc  = (supplied & PResizeInc) ? hints.height_inc : 0;
 }
 
 int
@@ -147,6 +168,7 @@ init_one_client(struct client *c, Window x)
 
    c->client_window = x;
    get_geometry_xywh(c);
+   get_size_hints(c);
    if (c->y < 23) {
       c->y = 23;
       XMoveWindow(dpy, c->client_window, c->x, c->y);
@@ -389,8 +411,26 @@ main(void)
             if (c->x < r.l)      c->x = r.l;
             if (c->y < r.t + 23) c->y = r.t + 23;
             if (press_button == 3) {
-               c->w = (o.r - c->x < 32) ? 32 : o.r - c->x;
-               c->h = (o.b - c->y < 32) ? 32 : o.b - c->y; }
+               int d;
+               c->w = (o.r - c->x < 0) ? 0 : o.r - c->x;
+               if (c->hints.width_inc > 0) {
+                  d = c->w;
+                  d -= c->hints.base_width;
+                  d %= c->hints.width_inc;
+                  c->w -= d;
+                  c->x += d;
+               }
+               if (c->w < 32) c->w = 32;
+               c->h = (o.b - c->y < 0) ? 0 : o.b - c->y;
+               if (c->hints.height_inc > 0) {
+                  d = c->h;
+                  d -= c->hints.base_height;
+                  d %= c->hints.height_inc;
+                  c->h -= d;
+                  c->y += d;
+               }
+               if (c->h < 32) c->h = 32;
+            }
             if (c->x > r.r - c->w - 2)
                c->x = r.r - c->w - 2;
             if (c->y > r.b + 1)

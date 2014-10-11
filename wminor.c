@@ -11,6 +11,7 @@ Window   root;
 struct size_hint {
    int base_width, base_height;
    int width_inc,  height_inc;
+   int min_width,  min_height;
 };
 struct client {
    Window client_window;
@@ -64,6 +65,10 @@ get_size_hints(struct client *c)
                           (supplied & PMinSize)  ? hints.min_height  : 32;
    c->hints.width_inc   = (supplied & PResizeInc) ? hints.width_inc  : 0;
    c->hints.height_inc  = (supplied & PResizeInc) ? hints.height_inc : 0;
+   c->hints.min_width   = (supplied & PMinSize)  ? hints.min_width   : 32;
+   c->hints.min_height  = (supplied & PMinSize)  ? hints.min_height  : 32;
+   if (c->hints.min_width  == 0) c->hints.min_width  = 32;
+   if (c->hints.min_height == 0) c->hints.min_height = 32;
 }
 
 int
@@ -420,7 +425,7 @@ main(void)
                   c->w -= d;
                   c->x += d;
                }
-               if (c->w < 32) c->w = 32;
+               if (c->w < c->hints.min_width) c->w = c->hints.min_width;
                c->h = (o.b - c->y < 0) ? 0 : o.b - c->y;
                if (c->hints.height_inc > 0) {
                   d = c->h;
@@ -429,7 +434,7 @@ main(void)
                   c->h -= d;
                   c->y += d;
                }
-               if (c->h < 32) c->h = 32;
+               if (c->h < c->hints.min_height) c->h = c->hints.min_height;
             }
             if (c->x > r.r - c->w - 2)
                c->x = r.r - c->w - 2;

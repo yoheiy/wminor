@@ -242,6 +242,18 @@ draw_title(struct client *c)
    XFreeGC(dpy, gc);
 }
 
+void
+draw_geom_on_titlebar(struct client *c)
+{
+   GC gc = XCreateGC(dpy, c->title_window, 0, NULL);
+   char buf[32]; /* 9999x9999+9999+9999_ */
+
+   sprintf(buf, "%dx%d+%d+%d", c->w, c->h, c->x, c->y);
+   XClearWindow(dpy, c->title_window);
+   XDrawString(dpy, c->title_window, gc, 4, 10, buf, strlen(buf));
+   XFreeGC(dpy, gc);
+}
+
 int
 main(void)
 {
@@ -317,6 +329,7 @@ main(void)
          if (!c) break;
          if (press_button != e.xbutton.button) break;
          press_button = 0;
+         draw_title(c);
          break;
       case MotionNotify:
          w = e.xmotion.window;
@@ -348,6 +361,7 @@ main(void)
                   c->x, c->y,      c->w, c->h);
             XMoveResizeWindow(dpy, c->title_window,
                   c->x, c->y - 23, c->w, 20);
+            draw_geom_on_titlebar(c);
          }
          break;
 

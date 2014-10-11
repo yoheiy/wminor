@@ -254,6 +254,13 @@ draw_geom_on_titlebar(struct client *c)
    XFreeGC(dpy, gc);
 }
 
+void
+apply_geom(struct client *c)
+{
+   XMoveResizeWindow(dpy, c->client_window, c->x, c->y,      c->w, c->h);
+   XMoveResizeWindow(dpy, c->title_window,  c->x, c->y - 23, c->w, 20);
+}
+
 int
 main(void)
 {
@@ -360,10 +367,7 @@ main(void)
                c->x = r.r - c->w - 2;
             if (c->y > r.b + 1)
                c->y = r.b + 1;
-            XMoveResizeWindow(dpy, c->client_window,
-                  c->x, c->y,      c->w, c->h);
-            XMoveResizeWindow(dpy, c->title_window,
-                  c->x, c->y - 23, c->w, 20);
+            apply_geom(c);
             draw_geom_on_titlebar(c);
          }
          break;

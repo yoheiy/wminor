@@ -261,12 +261,36 @@ apply_geom(struct client *c)
    XMoveResizeWindow(dpy, c->title_window,  c->x, c->y - 23, c->w, 20);
 }
 
+struct rect
+client_rect_body(struct client *c)
+{
+   struct rect o;
+
+   o.l = c->x;
+   o.t = c->y;
+   o.r = c->x + (int)c->w;
+   o.b = c->y + (int)c->h;
+
+   return o;
+}
+
+struct rect
+root_rect(void)
+{
+   struct rect r;
+
+   r.t = r.l = 0;
+   r.r = screen_width;
+   r.b = screen_height;
+
+   return r;
+}
+
 int
 main(void)
 {
    int press_button = 0;
    int dx, dy;
-   int rx, ry;
 
    dpy = XOpenDisplay(NULL);
    if (!dpy) return 1;
@@ -282,8 +306,8 @@ main(void)
       XEvent e;
       Window w, w_dragging;
       struct client *c;
-      struct rect r;
-      int ox, oy, shift_flag, shift_mode;
+      struct rect r, o;
+      int shift_flag, shift_mode;
 
       XNextEvent(dpy, &e);
 
@@ -320,13 +344,8 @@ main(void)
          press_button = e.xbutton.button;
          dx = c->x - e.xbutton.x_root;
          dy = c->y - e.xbutton.y_root;
-         ox = c->x;
-         oy = c->y;
-         rx = c->x + (int)c->w;
-         ry = c->y + (int)c->h;
-         r.t = r.l = 0;
-         r.r = screen_width;
-         r.b = screen_height;
+         o = client_rect_body(c);
+         r = root_rect();
          if (press_button == 2)
             fix_range(&r, c);
          draw_geom_on_titlebar(c);
@@ -353,16 +372,16 @@ main(void)
             c->y = e.xmotion.y_root + dy;
             if ((shift_flag &= e.xmotion.state)) {
                shift_mode = 0;
-               if (c->x > ox) shift_mode |= 1;
-               if (c->y > oy) shift_mode |= 2;
+               if (c->x > o.l) shift_mode |= 1;
+               if (c->y > o.t) shift_mode |= 2;
             }
-            if (shift_mode & 1) c->x = ox;
-            if (shift_mode & 2) c->y = oy;
+            if (shift_mode & 1) c->x = o.l;
+            if (shift_mode & 2) c->y = o.t;
             if (c->x < r.l)      c->x = r.l;
             if (c->y < r.t + 23) c->y = r.t + 23;
             if (press_button == 3) {
-               c->w = (rx - c->x < 32) ? 32 : rx - c->x;
-               c->h = (ry - c->y < 32) ? 32 : ry - c->y; }
+               c->w = (o.r - c->x < 32) ? 32 : o.r - c->x;
+               c->h = (o.b - c->y < 32) ? 32 : o.b - c->y; }
             if (c->x > r.r - c->w - 2)
                c->x = r.r - c->w - 2;
             if (c->y > r.b + 1)

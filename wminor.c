@@ -322,6 +322,7 @@ main(void)
          r.b = screen_height;
          if (press_button == 2)
             fix_range(&r, c);
+         draw_geom_on_titlebar(c);
          raise_upper(sort_clients(c));
          break;
       case ButtonRelease:

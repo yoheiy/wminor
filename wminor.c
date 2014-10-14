@@ -274,8 +274,17 @@ draw_geom_on_titlebar(struct client *c)
 {
    GC gc = XCreateGC(dpy, c->title_window, 0, NULL);
    char buf[32]; /* 9999x9999+9999+9999_ */
+   unsigned int cw = c->w, ch = c->h;
 
-   sprintf(buf, "%dx%d+%d+%d", c->w, c->h, c->x, c->y);
+   if (c->hints.width_inc > 0) {
+      cw -= c->hints.base_width;
+      cw /= c->hints.width_inc;
+   }
+   if (c->hints.height_inc > 0) {
+      ch -= c->hints.base_height;
+      ch /= c->hints.height_inc;
+   }
+   sprintf(buf, "%dx%d+%d+%d", cw, ch, c->x, c->y);
    XClearWindow(dpy, c->title_window);
    XDrawString(dpy, c->title_window, gc, 4, 10, buf, strlen(buf));
    XFreeGC(dpy, gc);

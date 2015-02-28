@@ -179,7 +179,7 @@ init_one_client(struct client *c, Window x)
       XMoveWindow(dpy, c->client_window, c->x, c->y);
    }
    XFetchName(dpy, x, &name);
-   c->name = strdup(name);
+   c->name = name ? strdup(name) : "";
    XFree(name);
    new_title(c);
    restack_client(c);

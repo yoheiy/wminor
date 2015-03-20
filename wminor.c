@@ -215,6 +215,9 @@ init_clients(Window root)
 
       init_one_client(&clients[nr_clients++], child[i]);
    }
+
+   if (child)
+      XFree(child);
 }
 
 enum { NONE, EAST, NORTH, WEST, SOUTH };

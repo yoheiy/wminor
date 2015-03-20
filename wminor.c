@@ -408,6 +408,10 @@ main(void)
          w = e.xbutton.window;
          c = find_client_from_title(w);
          if (!c) break;
+         if (press_button == 3 && e.xbutton.button == 2) {
+            r = root_rect();
+            fix_range(&r, c);
+         }
          if (press_button) break;
          w_dragging = w;
          shift_flag = e.xbutton.state & ShiftMask;

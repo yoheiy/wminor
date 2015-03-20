@@ -36,7 +36,8 @@ new_child(Window parent, int x, int y, int w, int h)
 void
 new_title(struct client *c)
 {
-   Window w = new_child(root, c->x, c->y - 23, c->w, 20);
+   int title_width = c->w + 2 * c->b - 2;
+   Window w = new_child(root, c->x, c->y - 23, title_width, 20);
    c->title_window = w;
    XSelectInput(dpy, w, ButtonPressMask | ButtonReleaseMask |
                                           ButtonMotionMask | EnterWindowMask | ExposureMask);
@@ -79,9 +80,9 @@ detect_collision(struct client *p, struct client *q, struct client *f)
    for (; q < p; q++) {
       xhit = yhit = 0;
       if ((f->x <= q->x) && ((f->x + f->w + 2 * f->b) > q->x)) xhit = 1;
-      if ((q->x <= f->x) && ((q->x + q->w + 2 * f->b) > f->x)) xhit = 1;
+      if ((q->x <= f->x) && ((q->x + q->w + 2 * q->b) > f->x)) xhit = 1;
       if ((f->y <= q->y) && ((f->y + f->h + 2 * f->b) > q->y)) yhit = 1;
-      if ((q->y <= f->y) && ((q->y + q->h + 2 * f->b) > f->y)) yhit = 1;
+      if ((q->y <= f->y) && ((q->y + q->h + 2 * q->b) > f->y)) yhit = 1;
       if (xhit && yhit) return 1;
    }
    return 0;
@@ -315,8 +316,11 @@ draw_geom_on_titlebar(struct client *c)
 void
 apply_geom(struct client *c)
 {
-   XMoveResizeWindow(dpy, c->client_window, c->x, c->y,      c->w, c->h);
-   XMoveResizeWindow(dpy, c->title_window,  c->x, c->y - 23, c->w, 20);
+   int t_y = c->y - 23;
+   int t_w = c->w + 2 * c->b - 2;
+
+   XMoveResizeWindow(dpy, c->client_window, c->x, c->y, c->w, c->h);
+   XMoveResizeWindow(dpy, c->title_window,  c->x, t_y,  t_w,  20);
 }
 
 struct rect
@@ -467,8 +471,8 @@ main(void)
                }
                if (c->h < c->hints.min_height) c->h = c->hints.min_height;
             }
-            if (c->x > r.r - c->w - 2)
-               c->x = r.r - c->w - 2;
+            if (c->x > r.r - c->w - 2 * c->b)
+               c->x = r.r - c->w - 2 * c->b;
             if (c->y > r.b + 1)
                c->y = r.b + 1;
             apply_geom(c);

@@ -187,6 +187,21 @@ init_one_client(struct client *c, Window x)
    XMapWindow(dpy, c->title_window);
 }
 
+Bool
+window_should_be_ignored(Window w)
+{
+   XWindowAttributes attr;
+
+   XGetWindowAttributes(dpy, w, &attr);
+   if (attr.class != InputOutput)
+      return True;
+   if (attr.map_state != IsViewable)
+      return True;
+   if (attr.override_redirect)
+      return True;
+   return False;
+}
+
 void
 init_clients(Window root)
 {
@@ -194,8 +209,12 @@ init_clients(Window root)
    unsigned int i, n;
 
    XQueryTree(dpy, root, &rt, &par, &child, &n);
-   for (i = 0; i < n; i++)
+   for (i = 0; i < n; i++) {
+      if (window_should_be_ignored(child[i]))
+         continue;
+
       init_one_client(&clients[nr_clients++], child[i]);
+   }
 }
 
 enum { NONE, EAST, NORTH, WEST, SOUTH };

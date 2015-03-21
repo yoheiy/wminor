@@ -21,6 +21,7 @@ struct client {
    unsigned int w, h, b;
    char *name;
    struct size_hint hints;
+   Bool has_focus;
 } clients[80];
 int nr_clients;
 int screen_width, screen_height;
@@ -188,10 +189,11 @@ init_one_client(struct client *c, Window x)
       c->y = 23;
       XMoveWindow(dpy, c->client_window, c->x, c->y);
    }
+   c->has_focus = False;
    init_one_client_set_name(c, x);
    new_title(c);
    restack_client(c);
-   XSelectInput(dpy, c->client_window, EnterWindowMask | PropertyChangeMask);
+   XSelectInput(dpy, c->client_window, EnterWindowMask | PropertyChangeMask | FocusChangeMask);
    XMapWindow(dpy, c->title_window);
 }
 
@@ -213,17 +215,22 @@ window_should_be_ignored(Window w)
 void
 init_clients(Window root)
 {
-   Window rt, par, *child;
+   struct client *c;
+   Window rt, par, *child, focus;
    unsigned int i, n;
+   int revert;
 
+   XGetInputFocus(dpy, &focus, &revert);
    XQueryTree(dpy, root, &rt, &par, &child, &n);
    for (i = 0; i < n; i++) {
       if (window_should_be_ignored(child[i]))
          continue;
 
-      init_one_client(&clients[nr_clients++], child[i]);
+      c = &clients[nr_clients++];
+      init_one_client(c, child[i]);
+      if (focus == child[i])
+         c->has_focus = True;
    }
-
    if (child)
       XFree(child);
 }
@@ -293,9 +300,12 @@ void
 draw_title(struct client *c)
 {
    GC gc = XCreateGC(dpy, c->title_window, 0, NULL);
+   int x = c->has_focus ? 12 : 4;
 
    XClearWindow(dpy, c->title_window);
-   XDrawString(dpy, c->title_window, gc, 4, 10, c->name, strlen(c->name));
+   XDrawString(dpy, c->title_window, gc, x, 10, c->name, strlen(c->name));
+   if (c->has_focus)
+      XFillRectangle(dpy, c->title_window, gc, 4, 4, 4, 4);
    XFreeGC(dpy, gc);
 }
 
@@ -497,6 +507,22 @@ main(void)
          if (!c) c = find_client(w);
          if (!c) break;
          XSetInputFocus(dpy, c->client_window, RevertToPointerRoot, CurrentTime);
+         break;
+
+      case FocusIn:
+         w = e.xfocus.window;
+         c = find_client(w);
+         if (!c) break;
+         c->has_focus = True;
+         titlebar_on_expose(c, w_dragging);
+         break;
+
+      case FocusOut:
+         w = e.xfocus.window;
+         c = find_client(w);
+         if (!c) break;
+         c->has_focus = False;
+         titlebar_on_expose(c, w_dragging);
          break;
 
       case PropertyNotify:

@@ -1,5 +1,6 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xatom.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -168,10 +169,18 @@ restack_client(struct client *c)
 }
 
 void
-init_one_client(struct client *c, Window x)
+init_one_client_set_name(struct client *c, Window x)
 {
    char *name;
 
+   XFetchName(dpy, x, &name);
+   c->name = strdup(name ?: "");
+   if (name) XFree(name);
+}
+
+void
+init_one_client(struct client *c, Window x)
+{
    c->client_window = x;
    get_geometry_xywh(c);
    get_size_hints(c);
@@ -179,12 +188,10 @@ init_one_client(struct client *c, Window x)
       c->y = 23;
       XMoveWindow(dpy, c->client_window, c->x, c->y);
    }
-   XFetchName(dpy, x, &name);
-   c->name = name ? strdup(name) : "";
-   XFree(name);
+   init_one_client_set_name(c, x);
    new_title(c);
    restack_client(c);
-   XSelectInput(dpy, c->client_window, EnterWindowMask);
+   XSelectInput(dpy, c->client_window, EnterWindowMask | PropertyChangeMask);
    XMapWindow(dpy, c->title_window);
 }
 
@@ -490,6 +497,15 @@ main(void)
          if (!c) c = find_client(w);
          if (!c) break;
          XSetInputFocus(dpy, c->client_window, RevertToPointerRoot, CurrentTime);
+         break;
+
+      case PropertyNotify:
+         w = e.xproperty.window;
+         c = find_client(w);
+         if (e.xproperty.atom != XA_WM_NAME) break;
+         free(c->name);
+         init_one_client_set_name(c, w);
+         titlebar_on_expose(c, w_dragging);
          break;
 
       case Expose:

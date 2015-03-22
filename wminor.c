@@ -1,11 +1,13 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+#include <X11/Xlocale.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 /* config */
 const int gap = 1;
+const char *font_name = "fixed,-*";
 
 Display *dpy;
 Window   root;
@@ -26,6 +28,7 @@ struct client {
 int nr_clients;
 int screen_width, screen_height;
 struct rect { int t, b, l, r; };
+XFontSet fset;
 
 Window
 new_child(Window parent, int x, int y, int w, int h)
@@ -172,11 +175,22 @@ restack_client(struct client *c)
 void
 init_one_client_set_name(struct client *c, Window x)
 {
-   char *name;
+   if (fset) {
+      XTextProperty text_prop;
+      char **list;
+      int n;
 
-   XFetchName(dpy, x, &name);
-   c->name = strdup(name ?: "");
-   if (name) XFree(name);
+      XGetWMName(dpy, x, &text_prop);
+      XmbTextPropertyToTextList(dpy, &text_prop, &list, &n);
+      c->name = strdup(*list ?: "");
+      XFreeStringList(list);
+   } else {
+      char *name;
+
+      XFetchName(dpy, x, &name);
+      c->name = strdup(name ?: "");
+      if (name) XFree(name);
+   }
 }
 
 void
@@ -303,7 +317,10 @@ draw_title(struct client *c)
    int x = c->has_focus ? 12 : 4;
 
    XClearWindow(dpy, c->title_window);
-   XDrawString(dpy, c->title_window, gc, x, 10, c->name, strlen(c->name));
+   if (fset)
+      XmbDrawString(dpy, c->title_window, fset, gc, x, 10, c->name, strlen(c->name));
+   else
+      XDrawString(dpy, c->title_window, gc, x, 10, c->name, strlen(c->name));
    if (c->has_focus)
       XFillRectangle(dpy, c->title_window, gc, 4, 4, 4, 4);
    XFreeGC(dpy, gc);
@@ -374,6 +391,24 @@ titlebar_on_expose(struct client *c, Window w_dragging)
       draw_title(c);
 }
 
+void
+init_set_locale(void)
+{
+   int n_missing, i;
+   char **l_missing;
+   char *def_str;
+
+   if (!setlocale(LC_CTYPE, "")) return;
+   if (!XSupportsLocale()) return;
+   fset = XCreateFontSet(dpy, font_name, &l_missing, &n_missing, &def_str);
+   if (!fset) return;
+
+   for (i = 0; i < n_missing; i++)
+      fprintf(stderr, "wminor: missing font `%s'\n", l_missing[i]);
+
+   XFreeStringList(l_missing);
+}
+
 int
 main(void)
 {
@@ -385,6 +420,7 @@ main(void)
 
    root = DefaultRootWindow(dpy);
    XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask);
+   init_set_locale();
    init_clients(root);
 
    screen_width  = XDisplayWidth(dpy, DefaultScreen(dpy));

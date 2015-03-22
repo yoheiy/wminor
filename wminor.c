@@ -189,7 +189,7 @@ init_one_client_set_name(struct client *c, Window x)
 
       XGetWMName(dpy, x, &text_prop);
       XmbTextPropertyToTextList(dpy, &text_prop, &list, &n);
-      c->name = strdup(*list ?: "");
+      c->name = strdup(list && *list ? *list : "");
       XFreeStringList(list);
    } else {
       char *name;

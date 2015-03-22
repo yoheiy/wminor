@@ -44,11 +44,15 @@ void
 new_title(struct client *c)
 {
    int title_width = c->w + 2 * c->b - 2;
+   XSetWindowAttributes attr;
    Window w = new_child(root, c->x, c->y - titlebar_height - 3,
                               title_width, titlebar_height);
    c->title_window = w;
    XSelectInput(dpy, w, ButtonPressMask | ButtonReleaseMask |
-                                          ButtonMotionMask | EnterWindowMask | ExposureMask);
+         ButtonMotionMask | EnterWindowMask | ExposureMask);
+
+   attr.override_redirect = True;
+   XChangeWindowAttributes(dpy, w, CWOverrideRedirect, &attr);
 }
 
 void
@@ -252,6 +256,37 @@ init_clients(Window root)
       XFree(child);
 }
 
+void
+swap_clients(struct client *c0, struct client *c1)
+{
+   struct client t;
+
+   if (c0 == c1) return;
+   t = *c0;
+   *c0 = *c1;
+   *c1 = t;
+}
+
+void
+revert_clients(void)
+{
+   struct client *c0, *c1;
+   Window rt, par, *child;
+   unsigned int i, j = 0, n;
+
+   XQueryTree(dpy, root, &rt, &par, &child, &n);
+   for (i = 0; i < n; i++) {
+      if (window_should_be_ignored(child[i]))
+         continue;
+
+      c0 = find_client(child[i]);
+      c1 = &clients[j++];
+      swap_clients(c0, c1);
+   }
+   if (child)
+      XFree(child);
+}
+
 enum { NONE, EAST, NORTH, WEST, SOUTH };
 int
 direction_collision(struct rect r0, struct rect r1)
@@ -415,6 +450,26 @@ init_set_locale(void)
    XFreeStringList(l_missing);
 }
 
+void
+configure_window(struct client *c, XConfigureRequestEvent e)
+{
+   XWindowChanges ch;
+
+   ch.x = e.x;
+   ch.y = e.y;
+   ch.width = e.width;
+   ch.height = e.height;
+   ch.border_width = e.border_width;
+   ch.sibling = e.above;
+   ch.stack_mode = e.detail;
+
+   XConfigureWindow(dpy, c->client_window, e.value_mask, &ch);
+   get_geometry_xywh(c);
+   restack_client(c);
+   apply_geom(c);
+   revert_clients();
+}
+
 int
 main(void)
 {
@@ -461,6 +516,13 @@ main(void)
          if (!c) break;
          XUnmapWindow(dpy, c->title_window);
          remove_client(c); c = NULL;
+         break;
+
+      case ConfigureRequest:
+         w = e.xconfigurerequest.window;
+         c = find_client(w);
+         if (!c) break;
+         configure_window(c, e.xconfigurerequest);
          break;
 
       case ButtonPress:

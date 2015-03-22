@@ -7,6 +7,7 @@
 #include <stdlib.h>
 /* config */
 const int gap = 1;
+const int titlebar_height = 14;
 const char *font_name = "fixed,-*";
 
 Display *dpy;
@@ -42,7 +43,8 @@ void
 new_title(struct client *c)
 {
    int title_width = c->w + 2 * c->b - 2;
-   Window w = new_child(root, c->x, c->y - 23, title_width, 20);
+   Window w = new_child(root, c->x, c->y - titlebar_height - 3,
+                              title_width, titlebar_height);
    c->title_window = w;
    XSelectInput(dpy, w, ButtonPressMask | ButtonReleaseMask |
                                           ButtonMotionMask | EnterWindowMask | ExposureMask);
@@ -199,8 +201,8 @@ init_one_client(struct client *c, Window x)
    c->client_window = x;
    get_geometry_xywh(c);
    get_size_hints(c);
-   if (c->y < 23) {
-      c->y = 23;
+   if (c->y < titlebar_height + 3) {
+      c->y = titlebar_height + 3;
       XMoveWindow(dpy, c->client_window, c->x, c->y);
    }
    c->has_focus = False;
@@ -288,7 +290,7 @@ client_rect(struct client *c)
    struct rect r;
 
    r.l = c->x;
-   r.t = c->y - 23;
+   r.t = c->y - titlebar_height - 3;
    r.r = c->x + c->w + 2 * c->b;
    r.b = c->y + c->h + 2 * c->b;
 
@@ -350,11 +352,11 @@ draw_geom_on_titlebar(struct client *c)
 void
 apply_geom(struct client *c)
 {
-   int t_y = c->y - 23;
+   int t_y = c->y - titlebar_height - 3;
    int t_w = c->w + 2 * c->b - 2;
 
    XMoveResizeWindow(dpy, c->client_window, c->x, c->y, c->w, c->h);
-   XMoveResizeWindow(dpy, c->title_window,  c->x, t_y,  t_w,  20);
+   XMoveResizeWindow(dpy, c->title_window,  c->x, t_y,  t_w,  titlebar_height);
 }
 
 struct rect
@@ -505,8 +507,9 @@ main(void)
             }
             if (shift_mode & 1) c->x = o.l;
             if (shift_mode & 2) c->y = o.t;
-            if (c->x < r.l)      c->x = r.l;
-            if (c->y < r.t + 23) c->y = r.t + 23;
+            if (c->x < r.l)     c->x = r.l;
+            if (c->y < r.t + titlebar_height + 3)
+               c->y = r.t + titlebar_height + 3;
             if (press_button == 3) {
                int d;
                c->w = (o.r - c->x < 0) ? 0 : o.r - c->x;

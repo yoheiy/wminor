@@ -8,6 +8,7 @@
 /* config */
 const int gap = 1;
 const int titlebar_height = 14;
+const int baseline_height = 4;
 const char *font_name = "fixed,-*";
 
 Display *dpy;
@@ -320,9 +321,11 @@ draw_title(struct client *c)
 
    XClearWindow(dpy, c->title_window);
    if (fset)
-      XmbDrawString(dpy, c->title_window, fset, gc, x, 10, c->name, strlen(c->name));
+      XmbDrawString(dpy, c->title_window, fset, gc,
+            x, titlebar_height - baseline_height, c->name, strlen(c->name));
    else
-      XDrawString(dpy, c->title_window, gc, x, 10, c->name, strlen(c->name));
+      XDrawString(dpy, c->title_window, gc,
+            x, titlebar_height - baseline_height, c->name, strlen(c->name));
    if (c->has_focus)
       XFillRectangle(dpy, c->title_window, gc, 4, 4, 4, 4);
    XFreeGC(dpy, gc);
@@ -345,7 +348,8 @@ draw_geom_on_titlebar(struct client *c)
    }
    sprintf(buf, "%dx%d+%d+%d", cw, ch, c->x, c->y);
    XClearWindow(dpy, c->title_window);
-   XDrawString(dpy, c->title_window, gc, 4, 10, buf, strlen(buf));
+   XDrawString(dpy, c->title_window, gc,
+         4, titlebar_height - baseline_height, buf, strlen(buf));
    XFreeGC(dpy, gc);
 }
 

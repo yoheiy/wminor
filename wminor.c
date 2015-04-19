@@ -608,9 +608,7 @@ main(void)
 
       case EnterNotify:
          w = e.xcrossing.window;
-         c = find_client_from_title(w);
-         if (!c) c = find_client(w);
-         if (!c) break;
+         if (!(c = find_client(w))) break;
          XSetInputFocus(dpy, c->client_window, RevertToPointerRoot, CurrentTime);
          break;
 

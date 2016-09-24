@@ -21,6 +21,7 @@ GID button bindings
 -------------------
 
 Drag titlebar with
+
 - Button1 (left button) to move window,
 - Button2 (middle button) to move window in restricted way, and
 - Button3 (right button) to resize window.

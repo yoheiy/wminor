@@ -29,6 +29,8 @@ Drag titlebar with
 How to invoke wminor
 --------------------
 
+::
+
   shell> `'cat<3mice&><>'`&
 
 LICENSE

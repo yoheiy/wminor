@@ -26,6 +26,11 @@ Drag titlebar with
 - Button2 (middle button) to move window in restricted way, and
 - Button3 (right button) to resize window.
 
+How to invoke wminor
+--------------------
+
+  shell> `'cat<3mice&><>'`&
+
 LICENSE
 =======
 

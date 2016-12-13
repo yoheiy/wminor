@@ -2,6 +2,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/Xlocale.h>
+#include <X11/cursorfont.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -41,6 +42,35 @@ new_child(Window parent, int x, int y, int w, int h)
 }
 
 void
+set_cursor(struct client *c, unsigned int xc)
+{
+   Cursor cur;
+   Window w = c->title_window;
+
+   cur = XCreateFontCursor(dpy, xc);
+   XDefineCursor(dpy, w, cur);
+   XFreeCursor(dpy, cur);
+}
+
+void
+set_cursor_to_button(struct client *c, int button)
+{
+   unsigned int xc[] = {
+      [1] = XC_leftbutton,
+      [2] = XC_middlebutton,
+      [3] = XC_rightbutton,
+   };
+
+   set_cursor(c, xc[button]);
+}
+
+void
+set_cursor_to_default(struct client *c)
+{
+   set_cursor(c, XC_mouse);
+}
+
+void
 new_title(struct client *c)
 {
    int title_width = c->w + 2 * c->b - 2;
@@ -53,6 +83,8 @@ new_title(struct client *c)
 
    attr.override_redirect = True;
    XChangeWindowAttributes(dpy, w, CWOverrideRedirect, &attr);
+
+   set_cursor(c, XC_mouse);
 }
 
 void
@@ -546,6 +578,7 @@ main(void)
             fix_range(&r, c);
          draw_geom_on_titlebar(c);
          raise_upper(sort_clients(c));
+         set_cursor_to_button(c, press_button);
          break;
       case ButtonRelease:
          w = e.xbutton.window;
@@ -555,6 +588,7 @@ main(void)
          w_dragging = 0;
          press_button = 0;
          draw_title(c);
+         set_cursor_to_default(c);
          break;
       case MotionNotify:
          w = e.xmotion.window;

@@ -132,6 +132,7 @@ detect_collision(struct client *p, struct client *q, struct client *f)
    return 0;
 }
 
+/* this function invalidate client pointer */
 int
 sort_clients(struct client *y)
 {
@@ -577,8 +578,8 @@ main(void)
          if (press_button == 2)
             fix_range(&r, c);
          draw_geom_on_titlebar(c);
-         raise_upper(sort_clients(c));
          set_cursor_to_button(c, press_button);
+         raise_upper(sort_clients(c));
          break;
       case ButtonRelease:
          w = e.xbutton.window;

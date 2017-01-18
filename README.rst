@@ -15,7 +15,7 @@ Keyboard bindings
 -----------------
 
 wminor has no keybind.
-Please try Ratpoison to manipulate windows with keyboard.
+Please try Ratpoison if you want to manipulate windows with keyboard.
 
 GID button bindings
 -------------------

@@ -8,14 +8,14 @@ DESCRIPTION
 wminor is a minimalistic window manager.
 wminor is a non-reparenting window manager.
 Each window has titlebar.
-Titlebars are only UI wminor provides.
+Title bars are the only UI wminor provides.
 Window move is restricted to the screen real estate.
 
 Keyboard bindings
 -----------------
 
 wminor has no keybind.
-Please try ratpoison to manipulate windows with keyboard.
+Please try Ratpoison to manipulate windows with keyboard.
 
 GID button bindings
 -------------------

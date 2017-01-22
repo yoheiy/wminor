@@ -534,7 +534,7 @@ main(void)
          c = &clients[nr_clients++];
          w = e.xmaprequest.window;
          init_one_client(c, w);
-         XMapWindow(dpy, w);
+         XMapRaised(dpy, w);
          break;
       case UnmapNotify:
          w = e.xunmap.window;

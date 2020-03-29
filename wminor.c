@@ -60,6 +60,7 @@ set_cursor_to_button(struct client *c, int button)
       [2] = XC_middlebutton,
       [3] = XC_rightbutton,
    };
+   if (button > 3) return;
 
    set_cursor(c, xc[button]);
 }
